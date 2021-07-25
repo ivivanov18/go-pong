@@ -3,6 +3,7 @@ package main
 import (
 	"image/color"
 	"log"
+	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -13,11 +14,17 @@ type Game struct {
 	ai *Player
 }
 
+func (g *Game) ExitGame() {
+	os.Exit(0)
+}
+
 func (g *Game) Update() error {
 	if (ebiten.IsKeyPressed(ebiten.KeyArrowDown)) {
 		g.player.Update(ebiten.KeyArrowDown)
 	} else if (ebiten.IsKeyPressed(ebiten.KeyArrowUp)) {
 		g.player.Update(ebiten.KeyArrowUp)
+	} else if (ebiten.IsKeyPressed(ebiten.KeyEscape)) {
+		g.ExitGame()
 	}
 	return nil
 }

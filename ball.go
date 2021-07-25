@@ -36,3 +36,16 @@ func (ball *Ball) Update() {
 		ball.velY = -ball.velY
 	}
 }
+
+func (ball Ball) CollidesWith(player Player) bool {
+	// left edge of either is futher to the right than right edge of other
+	if ball.x > player.x + player.width || player.x > ball.x + ball.width {
+		return false;
+	}
+
+	if ball.y > player.y + player.height || player.y > ball.y + ball.height {
+		return false;
+	}
+
+	return true;
+}

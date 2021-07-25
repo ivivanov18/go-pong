@@ -18,11 +18,10 @@ func (player *Player) Draw(screen *ebiten.Image) {
 }
 
 //TODO replace magic number 240 with adequate const
-func (player *Player) Update(key ebiten.Key) {
-	switch(key) {
-	case ebiten.KeyArrowUp:
-		player.y = math.Max(player.y - 2, 0)
-	case ebiten.KeyArrowDown:
+func (player *Player) Update() {
+	if (ebiten.IsKeyPressed(ebiten.KeyArrowDown)) {
 		player.y = math.Min(player.y +2, 240 - player.height )
+	} else if (ebiten.IsKeyPressed(ebiten.KeyArrowUp)) {
+		player.y = math.Max(player.y - 2, 0)
 	}
 }

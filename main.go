@@ -9,6 +9,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/examples/resources/fonts"
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/audio"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/text"
 	"golang.org/x/image/font"
@@ -21,10 +22,25 @@ type Game struct {
 	player *Player
 	ai *Player
 	ball *Ball
+	audioContext *audio.Context
+	ballHitWall *audio.Player
+	ballHitPaddle *audio.Player
+	playerScored *audio.Player
 }
 
 func (g *Game) ExitGame() {
 	os.Exit(0)
+}
+
+func (g *Game) init() {
+	g.initPlayers()
+}
+
+func (g *Game) initPlayers() {
+	rand.Seed(86)
+	g.player = &Player {10, 40, 8, 40, color.White}
+	g.ai = &Player {300, 40, 8, 40, color.White }
+	g.ball = &Ball {160, 120, 5, 5, float64(rand.Intn(3)), float64(rand.Intn(3)), color.White}
 }
 
 func (g *Game) Update() error {
@@ -57,18 +73,11 @@ func (g *Game) Layout (outsideWidth, outsideHeight int) (screenWidth, screenHeig
 	return 320, 240
 }
 
-func main() {
+func initFonts() {
 	const dpi = 20
 	tt, err := opentype.Parse(fonts.MPlus1pRegular_ttf)
 	if err != nil {
 		log.Fatal(err)
-	}
-	rand.Seed(86)
-
-	g := &Game {
-		player: &Player {10, 40, 8, 40, color.White},
-		ai: &Player {300, 40, 8, 40, color.White },
-		ball: &Ball {160, 120, 5, 5, float64(rand.Intn(3)), float64(rand.Intn(3)), color.White},
 	}
 
 	mplusNormalFont, err = opentype.NewFace(tt, &opentype.FaceOptions{
@@ -79,6 +88,14 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+}
+
+func main() {
+	g := new(Game)
+	g.init()
+
+	initFonts()
 
 	ebiten.SetWindowSize(640, 480)
 	ebiten.SetWindowTitle("Hello, World!")

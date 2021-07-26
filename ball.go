@@ -6,7 +6,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
-
 type Ball struct {
 	x, y, height, width, velX, velY float64
 	clr                 color.Color

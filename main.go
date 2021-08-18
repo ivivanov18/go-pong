@@ -18,6 +18,14 @@ import (
 
 var mplusNormalFont font.Face
 
+type State int
+
+const (
+	Start State = iota  // the beginning of the game
+	Serve				// waiting key press to start game
+	Play				// the ball is being played
+	Done				// the game is finished, one of players has won
+)
 type Game struct {
 	player *Player
 	ai *Player
@@ -26,6 +34,7 @@ type Game struct {
 	ballHitWall *audio.Player
 	ballHitPaddle *audio.Player
 	playerScored *audio.Player
+	state State
 }
 
 func (g *Game) ExitGame() {
@@ -34,6 +43,7 @@ func (g *Game) ExitGame() {
 
 func (g *Game) init() {
 	g.initPlayers()
+	g.state = Start
 }
 
 func (g *Game) initPlayers() {

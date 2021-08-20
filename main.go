@@ -18,6 +18,7 @@ import (
 )
 
 var mplusNormalFont font.Face
+var menuFont font.Face
 
 type State int
 
@@ -52,7 +53,7 @@ func (g *Game) ExitGame() {
 func (g *Game) init() {
 	g.initPlayers()
 	g.score = Score{0, 0}
-	g.state = Play
+	g.state = NewGame 
 }
 
 func (g *Game) initPlayers() {
@@ -62,18 +63,20 @@ func (g *Game) initPlayers() {
 	g.ball = &Ball {160, 120, 5, 5, float64(rand.Intn(3)), float64(rand.Intn(3)), color.White}
 }
 
-func DisplayMenu() {
-	
-
+func DisplayMenu(screen *ebiten.Image) {
+	text.Draw(screen, "MENU", menuFont, 140, 80, color.White )
+	text.Draw(screen, "NEW GAME - PRESS SPACE", menuFont, 70, 130, color.White )
+	text.Draw(screen, "QUIT GAME - PRESS ESC", menuFont, 70, 150, color.White )
 }
 
 func (g *Game) Update() error {
 	if (ebiten.IsKeyPressed(ebiten.KeyEscape)) {
 		g.ExitGame()
 	}
-	if (g.state == NewGame) {
-		DisplayMenu();	
-	} else if (g.state == Scored) {
+	if (ebiten.IsKeyPressed(ebiten.KeySpace) && g.state == NewGame) {
+		g.state = Play
+	}
+	if (g.state == Scored) {
 			g.ball.x = 160
 			g.ball.y = 120
 		if (ebiten.IsKeyPressed(ebiten.KeySpace)) {
@@ -107,16 +110,20 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	var currentTPS string = fmt.Sprintf("TPS: %0.2f", ebiten.CurrentTPS())
-	ebitenutil.DebugPrint(screen, currentTPS)
-	text.Draw(screen, "GO PONG", mplusNormalFont, 140, 10, color.White )
-	text.Draw(screen, strconv.Itoa(g.score.player), mplusNormalFont, 150, 25, color.White)
-	text.Draw(screen, "-", mplusNormalFont, 155, 25, color.White)
-	text.Draw(screen, strconv.Itoa(g.score.ai), mplusNormalFont, 160, 25, color.White)
-	text.Draw(screen, strconv.FormatFloat(g.ball.x,'f',-1, 64), mplusNormalFont,10, 25, color.White)
-	g.player.object.Draw(screen)
-	g.ai.object.Draw(screen)
-	g.ball.Draw(screen)
+	if ( g.state == NewGame) {
+		DisplayMenu(screen);
+	} else {
+		var currentTPS string = fmt.Sprintf("TPS: %0.2f", ebiten.CurrentTPS())
+		ebitenutil.DebugPrint(screen, currentTPS)
+		text.Draw(screen, "GO PONG", mplusNormalFont, 140, 10, color.White )
+		text.Draw(screen, strconv.Itoa(g.score.player), mplusNormalFont, 150, 25, color.White)
+		text.Draw(screen, "-", mplusNormalFont, 155, 25, color.White)
+		text.Draw(screen, strconv.Itoa(g.score.ai), mplusNormalFont, 160, 25, color.White)
+		text.Draw(screen, strconv.FormatFloat(g.ball.x,'f',-1, 64), mplusNormalFont,10, 25, color.White)
+		g.player.object.Draw(screen)
+		g.ai.object.Draw(screen)
+		g.ball.Draw(screen)
+	}
 }
 
 func (g *Game) Layout (outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
@@ -132,6 +139,11 @@ func initFonts() {
 
 	mplusNormalFont, err = opentype.NewFace(tt, &opentype.FaceOptions{
 		Size:    34,
+		DPI:     dpi,
+		Hinting: font.HintingFull,
+	})
+	menuFont, err = opentype.NewFace(tt, &opentype.FaceOptions{
+		Size:    60,
 		DPI:     dpi,
 		Hinting: font.HintingFull,
 	})

@@ -6,6 +6,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"strconv"
 
 	"github.com/hajimehoshi/ebiten/examples/resources/fonts"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -21,20 +22,27 @@ var mplusNormalFont font.Face
 type State int
 
 const (
-	Start State = iota  // the beginning of the game
-	Serve				// waiting key press to start game
+	Scored = iota  // the beginning of the game
 	Play				// the ball is being played
-	Done				// the game is finished, one of players has won
+	Win 				// the game is finished, one of players has won
+	NewGame
 )
+
+type Score struct {
+	player int
+	ai int
+}
+
 type Game struct {
-	player *Player
-	ai *Player
+	player *ControlledPlayer
+	ai *AiPlayer
 	ball *Ball
 	audioContext *audio.Context
 	ballHitWall *audio.Player
 	ballHitPaddle *audio.Player
 	playerScored *audio.Player
 	state State
+	score Score
 }
 
 func (g *Game) ExitGame() {
@@ -43,29 +51,57 @@ func (g *Game) ExitGame() {
 
 func (g *Game) init() {
 	g.initPlayers()
-	g.state = Start
+	g.score = Score{0, 0}
+	g.state = Play
 }
 
 func (g *Game) initPlayers() {
 	rand.Seed(86)
-	g.player = &Player {10, 40, 8, 40, color.White}
-	g.ai = &Player {300, 40, 8, 40, color.White }
+	g.player = &ControlledPlayer{Object{10, 40, 8, 40, color.White}}
+	g.ai = &AiPlayer{Object{300, 40, 8, 40, color.White} }
 	g.ball = &Ball {160, 120, 5, 5, float64(rand.Intn(3)), float64(rand.Intn(3)), color.White}
+}
+
+func DisplayMenu() {
+	
+
 }
 
 func (g *Game) Update() error {
 	if (ebiten.IsKeyPressed(ebiten.KeyEscape)) {
 		g.ExitGame()
 	}
-	g.player.Update()
-	g.ball.Update()
-	if (g.ball.CollidesWith(*g.player)) {
-		g.ball.velX = -g.ball.velX
-		g.ball.x = g.player.x + g.player.width
-	}
-	if (g.ball.CollidesWith(*g.ai)) {
-		g.ball.velX = -g.ball.velX
-		g.ball.x = g.ai.x - g.ball.width
+	if (g.state == NewGame) {
+		DisplayMenu();	
+	} else if (g.state == Scored) {
+			g.ball.x = 160
+			g.ball.y = 120
+		if (ebiten.IsKeyPressed(ebiten.KeySpace)) {
+			g.state = Play
+			rand.Seed(86)
+			g.ball.velX = float64(rand.Intn(3))
+			g.ball.velY = float64(rand.Intn(3))
+		}
+	} else if (g.state == Play) {
+		g.player.Update()
+		g.ball.Update()
+		if (g.ball.CollidesWith(g.player.object)) {
+			g.ball.velX = -g.ball.velX
+			g.ball.x = g.player.object.x + g.player.object.width
+		}
+		if (g.ball.CollidesWith(g.ai.object)) {
+			g.ball.velX = -g.ball.velX
+			g.ball.x = g.ai.object.x - g.ball.width
+		}
+		
+		if (g.ball.x <= 0) {
+			g.score.ai += 1	
+			g.state = Scored
+		}
+		if (g.ball.x >=  315) {
+			g.score.player += 1
+			g.state = Scored
+		}
 	}
 	return nil
 }
@@ -74,8 +110,12 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	var currentTPS string = fmt.Sprintf("TPS: %0.2f", ebiten.CurrentTPS())
 	ebitenutil.DebugPrint(screen, currentTPS)
 	text.Draw(screen, "GO PONG", mplusNormalFont, 140, 10, color.White )
-	g.player.Draw(screen)
-	g.ai.Draw(screen)
+	text.Draw(screen, strconv.Itoa(g.score.player), mplusNormalFont, 150, 25, color.White)
+	text.Draw(screen, "-", mplusNormalFont, 155, 25, color.White)
+	text.Draw(screen, strconv.Itoa(g.score.ai), mplusNormalFont, 160, 25, color.White)
+	text.Draw(screen, strconv.FormatFloat(g.ball.x,'f',-1, 64), mplusNormalFont,10, 25, color.White)
+	g.player.object.Draw(screen)
+	g.ai.object.Draw(screen)
 	g.ball.Draw(screen)
 }
 
@@ -91,14 +131,13 @@ func initFonts() {
 	}
 
 	mplusNormalFont, err = opentype.NewFace(tt, &opentype.FaceOptions{
-		Size:    24,
+		Size:    34,
 		DPI:     dpi,
 		Hinting: font.HintingFull,
 	})
 	if err != nil {
 		log.Fatal(err)
 	}
-
 }
 
 func main() {

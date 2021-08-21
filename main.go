@@ -17,6 +17,8 @@ import (
 	"golang.org/x/image/font/opentype"
 )
 
+const scoreToWin = 3
+
 var mplusNormalFont font.Face
 var menuFont font.Face
 
@@ -27,6 +29,12 @@ const (
 	Play				// the ball is being played
 	Win 				// the game is finished, one of players has won
 	NewGame
+	Winner
+)
+
+const (
+	Player = iota
+	Ai
 )
 
 type Score struct {
@@ -64,9 +72,17 @@ func (g *Game) initPlayers() {
 }
 
 func DisplayMenu(screen *ebiten.Image) {
-	text.Draw(screen, "MENU", menuFont, 140, 80, color.White )
 	text.Draw(screen, "NEW GAME - PRESS SPACE", menuFont, 70, 130, color.White )
 	text.Draw(screen, "QUIT GAME - PRESS ESC", menuFont, 70, 150, color.White )
+}
+
+func DisplayWinner(screen *ebiten.Image, winner int) {
+	if (winner == Player) {
+		text.Draw(screen, "YOU WON!!!", menuFont, 100, 110, color.White )
+	}else {
+		text.Draw(screen, "THE OTHER PLAYER WON!", menuFont, 70, 110, color.White )
+	}
+	DisplayMenu(screen)
 }
 
 func (g *Game) Update() error {
@@ -75,6 +91,9 @@ func (g *Game) Update() error {
 	}
 	if (ebiten.IsKeyPressed(ebiten.KeySpace) && g.state == NewGame) {
 		g.state = Play
+	} else if (ebiten.IsKeyPressed(ebiten.KeySpace) && g.state == Winner) {
+		g.state = Play
+		g.score = Score{0,0}
 	}
 	if (g.state == Scored) {
 			g.ball.x = 160
@@ -96,7 +115,6 @@ func (g *Game) Update() error {
 			g.ball.velX = -g.ball.velX
 			g.ball.x = g.ai.object.x - g.ball.width
 		}
-		
 		if (g.ball.x <= 0) {
 			g.score.ai += 1	
 			g.state = Scored
@@ -105,13 +123,25 @@ func (g *Game) Update() error {
 			g.score.player += 1
 			g.state = Scored
 		}
+		//TODO: change with constant
+		if (g.score.player == scoreToWin || g.score.ai == scoreToWin) {
+			g.state = Winner
+		}
 	}
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	if ( g.state == NewGame) {
-		DisplayMenu(screen);
+		DisplayMenu(screen)
+	} else if (g.state == Winner) {
+		var winner int
+		if (g.score.player == scoreToWin) {
+			winner = Player
+		} else if (g.score.ai == scoreToWin) {
+			winner = Ai
+		}
+		DisplayWinner(screen, winner)
 	} else {
 		var currentTPS string = fmt.Sprintf("TPS: %0.2f", ebiten.CurrentTPS())
 		ebitenutil.DebugPrint(screen, currentTPS)

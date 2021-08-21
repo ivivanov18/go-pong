@@ -67,7 +67,7 @@ func (g *Game) init() {
 func (g *Game) initPlayers() {
 	rand.Seed(86)
 	g.player = &ControlledPlayer{Object{10, 40, 8, 40, color.White}}
-	g.ai = &AiPlayer{Object{300, 40, 8, 40, color.White} }
+	g.ai = &AiPlayer{Object{300, 40, 8, 40, color.White}}
 	g.ball = &Ball {160, 120, 5, 5, float64(rand.Intn(3)), float64(rand.Intn(3)), color.White}
 }
 
@@ -107,6 +107,7 @@ func (g *Game) Update() error {
 	} else if (g.state == Play) {
 		g.player.Update()
 		g.ball.Update()
+		g.ai.Update(g.ball)
 		if (g.ball.CollidesWith(g.player.object)) {
 			g.ball.velX = -g.ball.velX
 			g.ball.x = g.player.object.x + g.player.object.width
@@ -131,6 +132,17 @@ func (g *Game) Update() error {
 	return nil
 }
 
+func DisplayGoPongAndScore(screen *ebiten.Image, g *Game) {
+	var currentTPS string = fmt.Sprintf("TPS: %0.2f", ebiten.CurrentTPS())
+	ebitenutil.DebugPrint(screen, currentTPS)
+	text.Draw(screen, "GO PONG", mplusNormalFont, 140, 10, color.White )
+	text.Draw(screen, strconv.Itoa(g.score.player), mplusNormalFont, 150, 25, color.White)
+	text.Draw(screen, "-", mplusNormalFont, 155, 25, color.White)
+	text.Draw(screen, strconv.Itoa(g.score.ai), mplusNormalFont, 160, 25, color.White)
+	text.Draw(screen, strconv.FormatFloat(g.ai.object.y,'f',-1, 64),
+	mplusNormalFont,10, 25, color.White)
+}
+
 func (g *Game) Draw(screen *ebiten.Image) {
 	if ( g.state == NewGame) {
 		DisplayMenu(screen)
@@ -143,13 +155,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		}
 		DisplayWinner(screen, winner)
 	} else {
-		var currentTPS string = fmt.Sprintf("TPS: %0.2f", ebiten.CurrentTPS())
-		ebitenutil.DebugPrint(screen, currentTPS)
-		text.Draw(screen, "GO PONG", mplusNormalFont, 140, 10, color.White )
-		text.Draw(screen, strconv.Itoa(g.score.player), mplusNormalFont, 150, 25, color.White)
-		text.Draw(screen, "-", mplusNormalFont, 155, 25, color.White)
-		text.Draw(screen, strconv.Itoa(g.score.ai), mplusNormalFont, 160, 25, color.White)
-		text.Draw(screen, strconv.FormatFloat(g.ball.x,'f',-1, 64), mplusNormalFont,10, 25, color.White)
+		DisplayGoPongAndScore(screen, g)
 		g.player.object.Draw(screen)
 		g.ai.object.Draw(screen)
 		g.ball.Draw(screen)

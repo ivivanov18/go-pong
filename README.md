@@ -8,6 +8,14 @@ Classic game of pong developed in:
 
 The game uses a very basic AI for the opposite paddle
 
+## Instructions
+### Prerequisites
+- Have go installed
+
+### Run
+Run in the your favorite terminal in the go-pong folder:
+`go run *.go`
+
 ## Printscreens
 ### Initial Screen
 ![start](https://user-images.githubusercontent.com/4789838/130366848-ed34e60c-7b93-4d08-8cfe-fcaf7d7eb297.png)
